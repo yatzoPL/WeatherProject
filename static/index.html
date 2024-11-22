@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="UTF-8">
+   <title>Pogoda</title>
+   <style>
+       body {
+           font-family: Arial;
+           padding: 20px;
+           background: #f5f5f5;
+           max-width: 800px;
+           margin: 0 auto;
+       }
+       .weather-box {
+           border: 1px solid #ddd;
+           padding: 20px;
+           margin: 20px;
+           background: white;
+           border-radius: 8px;
+           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+       }
+       .forecast-day {
+           border-bottom: 1px solid #eee;
+           padding: 10px 0;
+           margin: 10px 0;
+       }
+       .forecast-day:last-child {
+           border-bottom: none;
+       }
+       h2 {
+           color: #333;
+           margin-bottom: 20px;
+       }
+       p {
+           margin: 8px 0;
+           color: #444;
+       }
+   </style>
+</head>
+<body>
+   <div class="weather-box">
+       <h2>Aktualna pogoda</h2>
+       <div id="current"></div>
+   </div>
+
+   <div class="weather-box">
+       <h2>Prognoza</h2>
+       <div id="forecast"></div>
+   </div>
+
+   <script>
+       document.addEventListener('DOMContentLoaded', function() {
+           const API_URL = 'http://127.0.0.1:5000';
+
+           async function getWeather() {
+               try {
+                   const response = await fetch(`${API_URL}/weather/52.23/21.01`);
+                   const data = await response.json();
+
+                   document.getElementById('current').innerHTML = `
+                       <p>🌡️ Temperatura: ${data.current_weather.temperature}${data.current_weather.temperature_unit}</p>
+                       <p>💧 Wilgotność: ${data.current_weather.humidity}${data.current_weather.humidity_unit}</p>
+                       <p>🌪️ Ciśnienie: ${data.current_weather.pressure}${data.current_weather.pressure_unit}</p>
+                   `;
+               } catch (error) {
+                   console.error('Błąd:', error);
+                   document.getElementById('current').innerHTML = 'Błąd pobierania danych';
+               }
+           }
+
+           async function getForecast() {
+               try {
+                   const response = await fetch(`${API_URL}/forecast/52.23/21.01/5`);
+                   const data = await response.json();
+
+                   document.getElementById('forecast').innerHTML = data.forecast
+                       .map(day => `
+                           <div class="forecast-day">
+                               <h3>${day.date}</h3>
+                               <p>🌡️ Max: ${day.temperature_max}${data.units.temperature_max_unit}</p>
+                               <p>🌡️ Min: ${day.temperature_min}${data.units.temperature_min_unit}</p>
+                               <p>🌧️ Opady: ${day.precipitation}${data.units.precipitation_sum_unit}</p>
+                           </div>
+                       `).join('');
+               } catch (error) {
+                   console.error('Błąd:', error);
+                   document.getElementById('forecast').innerHTML = 'Błąd pobierania prognozy';
+               }
+           }
+
+           getWeather();
+           getForecast();
+       });
+   </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+weather_cache.json
+.env
+venv/
+.DS_Store
+**/.DS_Store

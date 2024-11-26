@@ -115,15 +115,15 @@ Cloud Cover: {clouds}%
 <prompt_examples>
 Example 1:
 Input: Temperature High: 32°C, Temperature Low: 20°C, Precipitation: 5mm, Wind Speed: 10km/h, Humidity: 60%, Cloud Cover: 20%
-Output: Dziś mamy prawdziwe tropiki! 🌞 Pamiętaj o nawodnieniu i nakryciu głowy - Twoje samopoczucie jest najważniejsze. Jeśli planujesz aktywność na świeżym powietrzu, przełóż ją na wieczór, kiedy temperatura będzie przyjemniejsza. W międzyczasie może dobry moment na orzeźwiającą lemoniadę? 😎
+Output: Zapowiadają się prawdziwe tropiki! 🌞 Pamiętaj o nawodnieniu i nakryciu głowy - Twoje samopoczucie jest najważniejsze. Jeśli planujesz aktywność na świeżym powietrzu, przełóż ją na wieczór, kiedy temperatura będzie przyjemniejsza. W międzyczasie może dobry moment na orzeźwiającą lemoniadę? 😎
 
 Example 2:
 Input: Temperature High: -5°C, Temperature Low: -10°C, Precipitation: 0mm, Wind Speed: 25km/h, Humidity: 80%, Cloud Cover: 80%
-Output: Wygląda na to, że wilgotność postanowiła dzisiaj zachować dla siebie swoją tajemnicę! 😄 Temperatura jest dość mroźna, więc może to dobry moment na rozgrzewającą herbatę z imbirem? Zimowy spacer też może być przyjemny - tylko pamiętaj o ciepłym szaliku!
+Output: Wygląda na to, że wilgotność postanowiła zachować dla siebie swoją tajemnicę! 😄 Temperatura jest dość mroźna, więc może to dobry moment na rozgrzewającą herbatę z imbirem? Zimowy spacer też może być przyjemny - tylko pamiętaj o ciepłym szaliku!
 
 Example 3:
 Input: Temperature High: 18°C, Temperature Low: 10°C, Precipitation: 3mm, Wind Speed: 15km/h, Humidity: 50%, Cloud Cover: 40%
-Output: Mamy dzisiaj naprawdę przyjemny dzień! 🌤 Umiarkowana temperatura i delikatny wiatr tworzą idealne warunki na aktywność na świeżym powietrzu - może krótki spacer w czasie przerwy? Takie warunki mogą pozytywnie wpłynąć na Twoją energię i nastrój.
+Output: Będzie naprawdę przyjemny dzień! 🌤 Umiarkowana temperatura i delikatny wiatr tworzą idealne warunki na aktywność na świeżym powietrzu - może krótki spacer w czasie przerwy? Takie warunki mogą pozytywnie wpłynąć na Twoją energię i nastrój.
 </prompt_examples>
 
 Consider temperature variation, precipitation, and overall conditions when suggesting activities. Maintain a supportive and caring tone while keeping the message concise and engaging."""

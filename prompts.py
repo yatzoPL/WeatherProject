@@ -12,6 +12,7 @@ Create a conversational and supportive current weather description that includes
 - When suggesting activities, consider the current time of day
 - Use direct, personal language (addressing as "Ty", "Twój")
 - NEVER use overly familiar terms like "przyjacielu", "słońce"
+- NEVER put input data in the form of "Input: Temperature: 32°C, Wind Speed: 10km/h, Humidity: 65%, Cloud Cover: 20%" to output
 - Use present tense
 - For missing data, respond with light humor (40% humorous tone)
 - For extreme weather conditions, emphasize well-being advice while maintaining a positive tone

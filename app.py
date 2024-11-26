@@ -4,6 +4,16 @@ import requests
 import json
 from typing import Dict, Optional
 from time import time
+from openai import OpenAI
+from dotenv import load_dotenv
+from prompts import (
+    WEATHER_DESCRIPTION_PROMPT,
+    FORECAST_DESCRIPTION_PROMPT,
+    DAILY_DESCRIPTION_PROMPT
+)
+
+load_dotenv()
+client = OpenAI()
 
 app = Flask(__name__)
 CORS(app)
@@ -11,6 +21,7 @@ CORS(app)
 class WeatherAPI:
    def __init__(self):
        self.base_url = "https://api.open-meteo.com/v1/forecast"
+       self.geocoding_url = "https://nominatim.openstreetmap.org/reverse"
        self.cache_file = "weather_cache.json"
        self.cache_duration = 1800
        self.cache = self.load_cache()
@@ -25,6 +36,114 @@ class WeatherAPI:
    def save_cache(self):
        with open(self.cache_file, 'w') as f:
            json.dump(self.cache, f)
+
+   def _generate_weather_description(self, weather_data: Dict) -> str:
+       try:
+           current = weather_data["current_weather"]
+           prompt = WEATHER_DESCRIPTION_PROMPT.format(
+               temperature=current['temperature'],
+               temperature_unit=current['temperature_unit'],
+               wind_speed=current['wind_speed'],
+               wind_speed_unit=current['wind_speed_unit'],
+               humidity=current['humidity'],
+               humidity_unit=current['humidity_unit'],
+               clouds=current['clouds'],
+               clouds_unit=current['clouds_unit']
+           )
+           response = client.chat.completions.create(
+               model="gpt-3.5-turbo",
+               messages=[{"role": "user", "content": prompt}],
+               max_tokens=200,
+               temperature=0.7
+           )
+           return response.choices[0].message.content.strip()
+       except Exception as e:
+           print(f"Error generating description: {e}")
+           return "Weather description unavailable"
+
+   def _generate_forecast_description(self, forecast_data: Dict) -> str:
+       try:
+           prompt = FORECAST_DESCRIPTION_PROMPT.format(
+               temp_min=min(d['temperature_min'] for d in forecast_data['forecast']),
+               temp_max=max(d['temperature_max'] for d in forecast_data['forecast']),
+               precip_min=min(d['precipitation'] for d in forecast_data['forecast']),
+               precip_max=max(d['precipitation'] for d in forecast_data['forecast']),
+               # Add missing variables
+               wind_min=min(d['wind_speed'] for d in forecast_data['forecast']),
+               wind_max=max(d['wind_speed'] for d in forecast_data['forecast']),
+               humidity_min=min(d['humidity'] for d in forecast_data['forecast']),
+               humidity_max=max(d['humidity'] for d in forecast_data['forecast']),
+               cloud_min=min(d['clouds'] for d in forecast_data['forecast']),
+               cloud_max=max(d['clouds'] for d in forecast_data['forecast']),
+               daylight_min=min(d['daylight_duration'] for d in forecast_data['forecast']),
+               daylight_max=max(d['daylight_duration'] for d in forecast_data['forecast'])
+           )
+           response = client.chat.completions.create(
+               model="gpt-3.5-turbo",
+               messages=[{"role": "user", "content": prompt}],
+               max_tokens=150,
+               temperature=0.7
+           )
+           return response.choices[0].message.content.strip()
+       except Exception as e:
+           print(f"Error generating forecast description: {e}")
+           return "Nie udało się wygenerować podsumowania prognozy."
+
+   def _generate_daily_description(self, day_data: Dict) -> str:
+       try:
+           prompt = DAILY_DESCRIPTION_PROMPT.format(
+               temp_max=day_data['temperature_max'],
+               temp_min=day_data['temperature_min'],
+               precipitation=day_data['precipitation'],
+               wind_speed=day_data['wind_speed'],
+               humidity=day_data['humidity'],
+               clouds=day_data['clouds']
+           )
+           response = client.chat.completions.create(
+               model="gpt-3.5-turbo",
+               messages=[{"role": "user", "content": prompt}],
+               max_tokens=150,
+               temperature=0.7
+           )
+           return response.choices[0].message.content.strip()
+       except Exception as e:
+           print(f"Error generating daily description: {e}")
+           return "Description unavailable"
+
+   def get_location_name(self, latitude: float, longitude: float) -> str:
+       try:
+           params = {
+               "lat": latitude,
+               "lon": longitude,
+               "format": "json"
+           }
+           headers = {
+               "User-Agent": "WeatherAPIExercise/1.0"
+           }
+           
+           response = requests.get(
+               self.geocoding_url,
+               params=params,
+               headers=headers,
+               timeout=5
+           )
+           response.raise_for_status()
+           location_data = response.json()
+           
+           # Extract city name or address components
+           address = location_data.get("address", {})
+           city = (
+               address.get("city") or 
+               address.get("town") or 
+               address.get("village") or 
+               address.get("suburb") or 
+               "Unknown location"
+           )
+           return city
+           
+       except Exception as e:
+           print(f"Error getting location name: {e}")
+           return "Unknown location"
 
    def get_weather(self, latitude: float, longitude: float) -> Optional[Dict]:
        cache_key = f"current_{latitude}_{longitude}"
@@ -61,7 +180,8 @@ class WeatherAPI:
            processed_data = {
                "location": {
                    "latitude": latitude,
-                   "longitude": longitude
+                   "longitude": longitude,
+                   "city": self.get_location_name(latitude, longitude)
                },
                "current_weather": {
                    "temperature": raw_data["current"]["temperature_2m"],
@@ -76,6 +196,8 @@ class WeatherAPI:
                    "clouds_unit": raw_data["current_units"]["cloud_cover"]
                }
            }
+
+           processed_data["description"] = self._generate_weather_description(processed_data)
 
            self.cache[cache_key] = {
                'timestamp': time(),
@@ -113,7 +235,15 @@ class WeatherAPI:
                "latitude": latitude,
                "longitude": longitude,
                "forecast_days": days,
-               "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,daylight_duration",
+               "daily": [
+                   "temperature_2m_max",
+                   "temperature_2m_min",
+                   "precipitation_sum",
+                   "daylight_duration",
+                   "wind_speed_10m_max",
+                   "relative_humidity_2m_max",
+                   "cloud_cover_max"
+               ],
                "timezone": "auto"
            }
 
@@ -142,6 +272,9 @@ class WeatherAPI:
                    "temperature_min_unit": weather_forecast["daily_units"]["temperature_2m_min"],
                    "precipitation_sum_unit": weather_forecast["daily_units"]["precipitation_sum"],
                    "daylight_duration_unit": weather_forecast["daily_units"]["daylight_duration"],
+                   "wind_speed_unit": weather_forecast["daily_units"]["wind_speed_10m_max"],
+                   "humidity_unit": weather_forecast["daily_units"]["relative_humidity_2m_max"],
+                   "clouds_unit": weather_forecast["daily_units"]["cloud_cover_max"]
                },
                "forecast": [
                    {
@@ -150,10 +283,20 @@ class WeatherAPI:
                        "temperature_min": weather_forecast["daily"]["temperature_2m_min"][i],
                        "precipitation": weather_forecast["daily"]["precipitation_sum"][i],
                        "daylight_duration": weather_forecast["daily"]["daylight_duration"][i],
+                       "wind_speed": weather_forecast["daily"]["wind_speed_10m_max"][i],
+                       "humidity": weather_forecast["daily"]["relative_humidity_2m_max"][i],
+                       "clouds": weather_forecast["daily"]["cloud_cover_max"][i]
                    }
-                   for i in range(days)
+                   for i in range(1, min(len(weather_forecast["daily"]["time"]), days + 1))
                ]
            }
+
+           # Generate individual descriptions for each day
+           for day in processed_data["forecast"]:
+               day["description"] = self._generate_daily_description(day)
+
+           # Add the overall forecast summary
+           processed_data["summary"] = self._generate_forecast_description(processed_data)
 
            self.cache[cache_key] = {
                'timestamp': time(),

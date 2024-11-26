@@ -146,41 +146,64 @@
        @media (max-width: 768px) {
            .content-row {
                grid-template-columns: 1fr;
-               padding: 1rem;
-               gap: 1.5rem;
-               margin: 1rem auto;
+               padding: 0;
+               gap: 1rem;
+               margin: 1rem 0;
            }
            
            .weather-box {
-               padding: 1.25rem;
-               width: auto;
-               margin: 0 1rem;
+               padding: 1rem;
+               border-radius: 0;
+               margin: 0;
+               box-shadow: none;
+               border-bottom: 1px solid var(--border-color);
+           }
+
+           .header-box {
+               padding: 1rem;
            }
 
            .header-content {
-               padding: 0 1rem;
+               padding: 0;
            }
 
            .weather-info {
                grid-template-columns: 1fr;
-               gap: 0.75rem;
+               gap: 0.5rem;
            }
 
            .forecast-day {
                padding: 1rem;
-               margin: 0 -1.25rem;
+               margin: 0 -1rem;
+               border-bottom: 1px solid var(--border-color);
            }
 
            .weather-stat {
-               padding: 0.5rem 0.75rem;
+               padding: 0.75rem;
+               margin: 0;
+               border-radius: 0.5rem;
            }
 
            .description {
-               font-size: 0.9rem;
+               font-size: 0.875rem;
+               margin: 0.5rem 0;
            }
 
            h2, h3 {
-               font-size: 1.1rem;
+               font-size: 1rem;
+               margin-bottom: 0.5rem;
+           }
+
+           @supports (padding: max(0px)) {
+               .header-box {
+                   padding-top: max(1rem, env(safe-area-inset-top));
+                   padding-left: max(1rem, env(safe-area-inset-left));
+                   padding-right: max(1rem, env(safe-area-inset-right));
+               }
+               
+               body {
+                   padding-bottom: max(1rem, env(safe-area-inset-bottom));
+               }
            }
        }
 
